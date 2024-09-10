@@ -1,0 +1,30 @@
+Package: anabass
+Type: Package
+Title: Analyse Basic Structure of Sentences for Better Writing
+Version: 0.5.0
+Authors@R: 
+    person("Toshikazu", "Matsumura", , 
+           "matutosi@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-2306-6355"))
+Description: Provide an analysis in basic structure of sentences to improve writings. 
+    For example finding connetions between senteces and display them. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+URL: https://github.com/matutosi/anabass, https://matutosi.github.io/anabass/
+LazyData: true
+Imports: 
+    dplyr,
+    purrr,
+    rlang,
+    stats,
+    stringr,
+    tibble,
+    utils
+Suggests: 
+    ggplot2,
+    testthat (>= 3.0.0),
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: 
+    R (>= 2.10)
