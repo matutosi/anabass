@@ -29,7 +29,7 @@ add_x_pos <- function(df, group = "sentence", base = "word"){
   cols <- c(group, base, x_1, x_2)
   df |>
     dplyr::group_by(.data[[group]]) |>
-    dplyr::mutate(`:=`({{ x_2 }}, stringr::str_width(.data[[base]]))) |>
+    dplyr::mutate(`:=`({{ x_2 }}, string_width(.data[[base]], 0.5, 0.9))) |>
     dplyr::mutate(`:=`({{ x_2 }}, purrr::accumulate(.data[[x_2]], sum))) |>
     dplyr::mutate(`:=`({{ x_1 }},
                        dplyr::lag(.data[[x_2]], n = 1, default = 0))) |>
@@ -37,6 +37,11 @@ add_x_pos <- function(df, group = "sentence", base = "word"){
     dplyr::ungroup()
 }
 
+#' Wrappaer function for stringr::str_width
+#' 
+string_width <- function(string, intercept, slope){
+  intercept + stringr::str_width(string) * slope
+}
 
 #' Add index to a Data Frame
 #' Adds a new column `index` to a data frame, representing the cumulative sum of character lengths within specified groups.

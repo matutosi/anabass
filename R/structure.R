@@ -66,6 +66,30 @@ compute_diff_x <- function(df, con){
 #'   c("dog", "jump", "over", "the", "moon"),
 #'   c("apple", "apricot", "avocado", "banana")
 #' )
+#' sentences <- list(
+#'   c("これ", "は", "文章", "です"),
+#'   c("文章", "は", "短い", "方", "が", "よい"),
+#'   c("短い", "文章", "は", "読み", "やすい")
+#' )
+#' df <-
+#'   sentences |>
+#'   list2df() |>
+#'   add_x_pos() |>
+#'   add_index()
+#'
+#' for(i in seq_along(sentences)){
+#'   con <- connect_with(sentences, i)
+#'   diff <- compute_diff_x(df, con)
+#'   df <- update_x_pos(df, diff)
+#' }
+#' print(df, n = Inf)
+#' df <- align_zero(df)
+#'
+#' df |>
+#'   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
+#'   ggplot2::geom_text(hjust = 0) +
+#'   ggplot2::scale_y_reverse() +
+#'   ggplot2::theme_bw()
 #'
 #' @export
 update_x_pos <- function(df, diff){
