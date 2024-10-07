@@ -1,0 +1,111 @@
+---
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# pivotea
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of anabass is to analyse basic structure of sentences for better writeings.
+
+anabass is from a name of fish ginus anabas. 
+anabas was is thought to climb tree, but not in actual. 
+
+## Installation
+
+You can install the development version from [GitHub](https://github.com/) with:
+
+```{r, eval = FALSE}
+# install.packages("remotes")
+remotes::install_github("matutosi/anabass")
+```
+
+<!--
+You can also install from CRAN:
+
+```{r, eval = FALSE}
+install.packages("pivotea")
+```
+ -->
+
+
+## Example
+
+You can use `fun()` to analyse basic structure.
+
+```{r example}
+library(anabass)
+library(dplyr)
+library(ggplot2)
+
+devtools::load_all(".")
+library(moranajp)
+review_sentences <- 
+  review_chamame |>
+  unescape_utf() |>
+  add_sentence_no() |>
+  clean_up() |>
+  dplyr::filter(chap == 5) |>
+  dplyr::select(sentence, word = "\u539f\u5f62") |>
+  dplyr::filter(word != "") |>
+  dplyr::group_by(sentence) |>
+  dplyr::summarise(word = reduce(word, paste, sep = ";")) |>
+  `$`(_, "word") |>
+  stringr::str_split(";")
+
+df <-
+  review_sentences |>
+  list2df() |>
+  add_x_pos() |>
+  add_index()
+
+for(i in seq_along(review_sentences)){
+  con <- connect_with(review_sentences, i)
+  diff <- compute_diff_x(df, con)
+  df <- update_x_pos(df, diff)
+}
+print(df, n = Inf)
+
+
+df |>
+  ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
+  ggplot2::geom_text() +
+  ggplot2::scale_y_reverse() +
+  ggplot2::theme_bw()
+
+df <- 
+  review_chamame |>
+  unescape_utf() |>
+  dplyr::filter(chap == 5) |>
+  add_sentence_no() |>
+  dplyr::distinct(sect, para, sentence) |> 
+  dplyr::right_join(df)
+
+df |>
+  ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
+  ggplot2::geom_text() +
+  ggplot2::scale_y_reverse() +
+  ggplot2::theme_bw() + 
+  ggplot2::facet_wrap(vars(para))
+
+
+```
+
+## Citation
+
+Toshikazu Matsumura (2024) anabass: Analyse Basic Structure of Sentences for Better Writing. https://github.com/matutosi/anabass/.
+
