@@ -63,23 +63,12 @@ review_sentences <-
   `$`(_, "word") |>
   stringr::str_split(";")
 
-df <-
-  review_sentences |>
-  list2df() |>
-  add_x_pos() |>
-  add_index()
-
-for(i in seq_along(review_sentences)){
-  con <- connect_with(review_sentences, i)
-  diff <- compute_diff_x(df, con)
-  df <- update_x_pos(df, diff)
-}
-print(df)
-
+df <- connect_sentences(review_sentences)
 
 df |>
   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
-  ggplot2::geom_text() +
+  ggplot2::geom_point() +
+  gghighlight::gghighlight(highlight == TRUE, label_key = word) +
   ggplot2::scale_y_reverse() +
   ggplot2::theme_bw()
 

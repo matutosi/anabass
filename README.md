@@ -1,10 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# pivotea
-
-<!-- badges: start -->
-<!-- badges: end -->
+# anabass
 
 The goal of anabass is to analyse basic structure of sentences for
 better writeings.
@@ -60,39 +57,15 @@ review_sentences <-
   `$`(_, "word") |>
   stringr::str_split(";")
 
-df <-
-  review_sentences |>
-  list2df() |>
-  add_x_pos() |>
-  add_index()
-
-for(i in seq_along(review_sentences)){
-  con <- connect_with(review_sentences, i)
-  diff <- compute_diff_x(df, con)
-  df <- update_x_pos(df, diff)
-}
-print(df)
-#> # A tibble: 426 × 5
-#>    sentence word         x_start x_end index
-#>       <int> <chr>          <dbl> <dbl> <int>
-#>  1        1 草原            184   188.     1
-#>  2        1 おく            188.  192.     2
-#>  3        1 単位            192.  196.     3
-#>  4        1 面積            196.  200.     4
-#>  5        1 世界            200.  204.     5
-#>  6        1 最高            204.  209.     6
-#>  7        1 植物            209.  213.     7
-#>  8        1 種数            213.  217.     8
-#>  9        1 チェコ          217.  223.     9
-#> 10        1 アルゼンチン    223.  234     10
-#> # ℹ 416 more rows
-
+df <- connect_sentences(review_sentences)
 
 df |>
   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
-  ggplot2::geom_text() +
+  ggplot2::geom_point() +
+  gghighlight::gghighlight(highlight == TRUE, label_key = word) +
   ggplot2::scale_y_reverse() +
   ggplot2::theme_bw()
+#> Too many data points, skip labeling
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
