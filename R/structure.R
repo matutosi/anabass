@@ -1,54 +1,61 @@
-#' Compute the Difference in `x` Values Between Two Sentences
-#' Calculates the difference in `x` values between two sentences based on the specified connection.
-#' @param con A data frame or list representing the connection between two sentences.
-#' @return A list containing the difference in `x` values and the index of the first sentence.
-#' @inheritParams update_x_pos
-#' @examples
-#' sentences <- list(
-#'   c("there", "is", "a", "quick", "brown", "fox"),
-#'   c("the", "fox", "chase", "a", "lazy", "dog"),
-#'   c("dog", "jump", "over", "the", "moon"),
-#'   c("apple", "apricot", "avocado", "banana")
-#' )
-#' df <-
-#'   sentences |>
-#'   list2df() |>
-#'   add_x_pos() |>
-#'   add_index()
-#'
-#' con <- connect_with(sentences, 1)
-#' compute_diff_x(df, con)
-#'
-#' con <- connect_with(sentences, 2)
-#' compute_diff_x(df, con)
-#'
-#' con <- connect_with(sentences, 3)
-#' compute_diff_x(df, con)
-#'
-#' con <- connect_with(sentences, 4)
-#' compute_diff_x(df, con)
-#'
-#'
-#' @export
-compute_diff_x <- function(df, con){
-  s_i <- con$sentence_i
-  s_j <- con$sentence_j
-  w_i <- con$word_i
-  w_j <- con$word_j
-  x_start_i <-
-    dplyr::filter(df, .data[["sentence"]] == s_i, .data[["index"]] == w_i) |>
-    `$`(_, "x_start")
-  if(is.null(s_j)){ # when no match
-    x_start_j <- max(df$x_end)
-  }else{
-    x_start_j <-
-      dplyr::filter(df, .data[["sentence"]] == s_j, .data[["index"]] == w_j) |>
-      `$`(_, "x_start")
-  }
-  x_start_diff <- x_start_j - x_start_i
-  diff <- list(difference = x_start_diff,
-               sentence_i = s_i)
-  return(diff)
+connect_sentence_i <- function(df, i, connect){
+  diff <- compute_diff_x(df, connect[[i]])
+  df <- update_x_pos(df, diff)
+  return(df)
+}
+
+connect_sentences <- function(sentences){
+  df <- sentence2df(sentences)
+  connect <- connection(sentences)
+  df <-
+    seq_along(sentences) |>
+    purrr::reduce(connect_sentence_i,
+                  .init = df,
+                  connect = connect)
+  df <- highlight_connect_word(df, connect)
+  df <- align_zero(df)
+  return(df)
+}
+
+
+connection <- function(sentences){
+  seq <- seq_along(sentences)
+  connect <-
+    seq |>
+    purrr::map(connect_with, sentences)
+  return(connect)
+}
+
+sentence2df <- function(sentences){
+  df <-
+    sentences |>
+    list2df() |>
+    add_x_pos() |>
+    add_index()
+  return(df)
+}
+
+highlight_df <- function(connect){
+  connect <-
+    connect |>
+    dplyr::bind_rows() |>
+    na.omit()
+  df <-
+    tibble::tibble(
+      sentence = c(connect$sentence_i, connect$sentence_j),
+      index = c(connect$word_i, connect$word_j),
+      highlight = TRUE) |>
+    dplyr::distinct()
+  return(df)
+}
+
+highlight_connect_word <- function(df, connect){
+  high_df <- highlight_df(connect)
+  df <-
+    df |>
+    dplyr::left_join(high_df,
+                     by = join_by("sentence", "index"))
+  return(df)
 }
 
 
@@ -66,24 +73,29 @@ compute_diff_x <- function(df, con){
 #'   c("dog", "jump", "over", "the", "moon"),
 #'   c("apple", "apricot", "avocado", "banana")
 #' )
+#'
 #' sentences <- list(
 #'   c("これ", "は", "文章", "です"),
 #'   c("文章", "は", "短い", "方", "が", "よい"),
 #'   c("短い", "文章", "は", "読み", "やすい")
 #' )
-#' df <-
-#'   sentences |>
-#'   list2df() |>
-#'   add_x_pos() |>
-#'   add_index()
 #'
-#' for(i in seq_along(sentences)){
-#'   con <- connect_with(sentences, i)
-#'   diff <- compute_diff_x(df, con)
-#'   df <- update_x_pos(df, diff)
-#' }
-#' print(df, n = Inf)
-#' df <- align_zero(df)
+#' df <- connect_sentences(sentences)
+#'
+#' df |>
+#'   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
+#'   ggplot2::geom_point() +
+#'   gghighlight::gghighlight(highlight == TRUE, label_key = word) +
+#'   ggplot2::scale_y_reverse() +
+#'   ggplot2::theme_bw()
+#'
+#' df |>
+#'   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence,
+#'                                label = word,
+#'                                fill = highlight)) +
+#'   ggplot2::geom_label() +
+#'   ggplot2::scale_y_reverse() +
+#'   ggplot2::theme_bw()
 #'
 #' df |>
 #'   ggplot2::ggplot(ggplot2::aes(x = x_start, y = sentence, label = word)) +
@@ -110,6 +122,59 @@ update_x_pos <- function(df, diff){
   return(df)
 }
 
+
+#' Compute the Difference in `x` Values Between Two Sentences
+#' Calculates the difference in `x` values between two sentences based on the specified connection.
+#' @param con A data frame or list representing the connection between two sentences.
+#' @return A list containing the difference in `x` values and the index of the first sentence.
+#' @inheritParams update_x_pos
+#' @examples
+#' sentences <- list(
+#'   c("there", "is", "a", "quick", "brown", "fox"),
+#'   c("the", "fox", "chase", "a", "lazy", "dog"),
+#'   c("dog", "jump", "over", "the", "moon"),
+#'   c("apple", "apricot", "avocado", "banana")
+#' )
+#' df <-
+#'   sentences |>
+#'   list2df() |>
+#'   add_x_pos() |>
+#'   add_index()
+#'
+#' con <- connect_with(1, sentences)
+#' compute_diff_x(df, con)
+#'
+#' con <- connect_with(2, sentences)
+#' compute_diff_x(df, con)
+#'
+#' con <- connect_with(3, sentences)
+#' compute_diff_x(df, con)
+#'
+#' con <- connect_with(4, sentences)
+#' compute_diff_x(df, con)
+#'
+#'
+#' @export
+compute_diff_x <- function(df, con){
+  s_i <- con$sentence_i
+  s_j <- con$sentence_j
+  w_i <- con$word_i
+  w_j <- con$word_j
+  x_start_i <-
+    dplyr::filter(df, .data[["sentence"]] == s_i, .data[["index"]] == w_i) |>
+    `$`(_, "x_start")
+  if(is.null(s_j)){ # when no match
+    x_start_j <- max(df$x_end)
+  }else{
+    x_start_j <-
+      dplyr::filter(df, .data[["sentence"]] == s_j, .data[["index"]] == w_j) |>
+      `$`(_, "x_start")
+  }
+  x_start_diff <- x_start_j - x_start_i
+  diff <- list(difference = x_start_diff,
+               sentence_i = s_i)
+  return(diff)
+}
 
 #' Convert List of Sentences to Data Frame
 #' Converts a list of character vectors (sentences) into a data frame with two columns: `word` and `sentence`.
@@ -179,12 +244,12 @@ search_common_word <- function(sentence_i, sentence_j){
 #'   c("the", "fox", "chase", "a", "lazy", "dog"),
 #'   c("dog", "jump", "over", "the", "moon")
 #' )
-#' connect_with(sentences, 1)
-#' connect_with(sentences, 2)
-#' connect_with(sentences, 3)
+#' connect_with(1, sentences)
+#' connect_with(2, sentences)
+#' connect_with(3, sentences)
 #'
 #' @export
-connect_with <- function(sentences, i){
+connect_with <- function(i, sentences){
   len <- length(sentences)
   if(len == 1) return(list(sentence_i = i))
   for(j in search_index(i)){
@@ -198,8 +263,6 @@ connect_with <- function(sentences, i){
   }
   return(list(sentence_i = i, word_i = 1))
 }
-
-
 
 #' Split sentence into list
 #' @param df A dataframe
