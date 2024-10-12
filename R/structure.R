@@ -5,7 +5,7 @@ connect_sentence_i <- function(df, i, connect){
 }
 
 connect_sentences <- function(sentences){
-  df <- sentence2df(sentences)
+  df <- sentences2df(sentences)
   connect <- connection(sentences)
   df <-
     seq_along(sentences) |>
@@ -26,7 +26,7 @@ connection <- function(sentences){
   return(connect)
 }
 
-sentence2df <- function(sentences){
+sentences2df <- function(sentences){
   df <-
     sentences |>
     list2df() |>
