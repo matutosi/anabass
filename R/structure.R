@@ -1,9 +1,33 @@
+connection <- function(sentences){
+  seq <- seq_along(sentences)
+  connect <-
+    seq |>
+    purrr::map(connect_with, sentences)
+  return(connect)
+}
+
 connect_sentence_i <- function(df, i, connect){
   diff <- compute_diff_x(df, connect[[i]])
   df <- update_x_pos(df, diff)
   return(df)
 }
 
+#' @title Connect Sentences Based on Common Words
+#' @description Connects sentences in a list based on shared common words, 
+#'             adjusting their `x` positions accordingly.
+#' @param sentences A list of sentences (character vectors).
+#' @return A data frame containing the sentences 
+#'         with updated `x` positions to reflect the connections.
+#'
+#' @examples
+#' sentences <- list(
+#'   c("the", "quick", "brown", "fox"),
+#'   c("the", "lazy", "dog"),
+#'   c("jumped", "over", "the", "moon")
+#' )
+#' connected_df <- connect_sentences(sentences)
+#'
+#' @export
 connect_sentences <- function(sentences){
   df <- sentences2df(sentences)
   connect <- connection(sentences)
@@ -17,15 +41,21 @@ connect_sentences <- function(sentences){
   return(df)
 }
 
-
-connection <- function(sentences){
-  seq <- seq_along(sentences)
-  connect <-
-    seq |>
-    purrr::map(connect_with, sentences)
-  return(connect)
-}
-
+#' @title Create a Data Frame from Sentences
+#' @description Converts a list of sentences into a data frame with 
+#'              `word`, `sentence`, `x_start`, and `x_end` columns.
+#' @param sentences A list of sentences (character vectors).
+#' @return A data frame representing the sentences.
+#'
+#' @examples
+#' sentences <- list(
+#'   c("the", "quick", "brown", "fox"),
+#'   c("the", "lazy", "dog"),
+#'   c("jumped", "over", "the", "moon")
+#' )
+#' df <- sentences2df(sentences)
+#'
+#' @export
 sentences2df <- function(sentences){
   df <-
     sentences |>
@@ -35,6 +65,22 @@ sentences2df <- function(sentences){
   return(df)
 }
 
+#' @title Highlight Connected Words in a Data Frame
+#' @description Adds a `highlight` column to a data frame indicating 
+#'              which words are connected.
+#' @param connect A data frame or list representing connections between sentences.
+#' @return The modified data frame with the `highlight` column.
+#'
+#' @examples
+#' connect <- data.frame(
+#'   sentence_i = c(1, 1),
+#'   sentence_j = c(2, 3),
+#'   word_i = c(1, 3),
+#'   word_j = c(1, 3)
+#' )
+#' df <- highlight_df(connect)
+#'
+#' @export
 highlight_df <- function(connect){
   connect <-
     connect |>
@@ -49,6 +95,30 @@ highlight_df <- function(connect){
   return(df)
 }
 
+#' @title Highlight Connected Words in a Data Frame
+#' @description Adds a `highlight` column to a data frame indicating 
+#'              which words are connected.
+#' @param df A data frame containing sentence information.
+#' @param connect A data frame or list representing connections between sentences.
+#' @return The modified data frame with the `highlight` column.
+#'
+#' @examples
+#' df <- data.frame(
+#'   sentence = c(1, 1, 1, 2, 2),
+#'   index = c(1, 2, 3, 1, 2),
+#'   x_start = c(0, 3, 8, 0, 3),
+#'   x_end = c(3, 8, 14, 3, 7),
+#'   stringsAsFactors = FALSE
+#' )
+#' connect <- data.frame(
+#'   sentence_i = 1,
+#'   sentence_j = 2,
+#'   word_i = 3,
+#'   word_j = 1
+#' )
+#' df <- highlight_connect_word(df, connect)
+#'
+#' @export
 highlight_connect_word <- function(df, connect){
   high_df <- highlight_df(connect)
   df <-
