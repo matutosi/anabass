@@ -1,3 +1,16 @@
+#' @title Find Connections Between Sentences
+#' @description Finds connections between sentences 
+#'              in a list based on shared common words.
+#' @param sentences A list of sentences (character vectors).
+#' @return A list of connections, where each element represents 
+#'          a connection between two sentences.
+#' @examples
+#' sentences <- list(
+#'   c("the", "quick", "brown", "fox"),
+#'   c("the", "lazy", "dog"),
+#'   c("jumped", "over", "the", "moon")
+#' )
+#' connections <- connection(sentences)
 connection <- function(sentences){
   seq <- seq_along(sentences)
   connect <-
@@ -6,6 +19,22 @@ connection <- function(sentences){
   return(connect)
 }
 
+#' @title Connect a Sentence with Others
+#' @description Connects a specific sentence with other sentences 
+#'              in the list based on shared common words.
+#' @param df A data frame containing sentence information.
+#' @param i The index of the target sentence.
+#' @param connect A list of connections between sentences.
+#' @return The modified data frame with updated `x` positions.
+#' @examples
+#' sentences <- list(
+#'   c("the", "quick", "brown", "fox"),
+#'   c("the", "lazy", "dog"),
+#'   c("jumped", "over", "the", "moon")
+#' )
+#' df <- sentences2df(sentences)
+#' connect <- connection(sentences)
+#' df <- connect_sentence_i(df, 1, connect)
 connect_sentence_i <- function(df, i, connect){
   diff <- compute_diff_x(df, connect[[i]])
   df <- update_x_pos(df, diff)
